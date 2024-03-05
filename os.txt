@@ -1,2 +1,0 @@
-user/kernel space
-process layout/states(c4) uqhf80qgjofoni
