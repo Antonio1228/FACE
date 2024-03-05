@@ -1,0 +1,2 @@
+user/kernel space
+process layout/states(c4)
