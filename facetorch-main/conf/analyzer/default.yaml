@@ -1,2 +1,0 @@
-device: cpu # str
-optimize_transforms: True # bool
