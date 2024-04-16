@@ -191,7 +191,6 @@ threadpoolctl==3.2.0
 tifffile==2023.7.10
 tinycss2
 tomli
-torch==1.13.1
 tornado
 tqdm
 traitlets
