@@ -162,8 +162,6 @@ python-dateutil
 python-dotenv==1.0.1
 python-json-logger
 pytz
-PyWavelets==1.4.1
-pywin32==305.1
 pywinpty
 PyYAML
 pyzmq
