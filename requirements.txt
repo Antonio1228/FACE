@@ -150,8 +150,6 @@ pyasn1==0.5.1
 pyasn1-modules==0.3.0
 pycosat
 pycparser
-pydantic==2.7.0
-pydantic_core==2.18.1
 Pygments
 pynv==0.3
 pyparsing==3.1.1
@@ -188,11 +186,6 @@ soupsieve
 stack-data
 sympy==1.12
 tenacity==8.2.3
-tensorboard==2.13.0
-tensorboard-data-server==0.7.2
-tensorflow==2.13.0
-tensorflow-estimator==2.13.0
-tensorflow-io-gcs-filesystem==0.31.0
 termcolor==2.4.0
 terminado
 threadpoolctl==3.2.0
@@ -203,6 +196,7 @@ torch==1.13.1
 tornado
 tqdm
 traitlets
+typing_extensions ==4.10.0
 tzdata==2023.3
 urllib3
 wcwidth
