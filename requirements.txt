@@ -97,7 +97,6 @@ jupyterlab
 jupyterlab-pygments
 jupyterlab-widgets
 jupyterlab_server
-keras==2.13.1
 kiwisolver==1.4.5
 kornia==0.7.1
 lazy_loader==0.3
@@ -196,7 +195,6 @@ torch==1.13.1
 tornado
 tqdm
 traitlets
-typing_extensions==4.10.0
 tzdata==2023.3
 urllib3
 wcwidth
@@ -205,7 +203,6 @@ websocket-client
 Werkzeug==3.0.1
 widgetsnbextension
 win-inet-pton
-wrapt==1.16.0
 xgboost==2.0.3
 y-py
 yarl==1.9.4
