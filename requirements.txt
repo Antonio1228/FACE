@@ -32,10 +32,6 @@ click==8.1.7
 codetiming==1.4.0
 colorama
 comm
-conda
-conda-libmamba-solver
-conda-package-handling
-conda_package_streaming
 contourpy==1.1.1
 cycler==0.12.1
 debugpy
