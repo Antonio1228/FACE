@@ -203,7 +203,6 @@ torch==1.13.1
 tornado
 tqdm
 traitlets
-typing_extensions>=4.6.1
 tzdata==2023.3
 urllib3
 wcwidth
