@@ -102,7 +102,6 @@ kiwisolver==1.4.5
 kornia==0.7.1
 lazy_loader==0.3
 libclang==16.0.6
-libmambapy
 line-bot-sdk==2.3.0
 lxml==5.1.0
 Markdown==3.5.1
