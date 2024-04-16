@@ -162,7 +162,6 @@ python-dateutil
 python-dotenv==1.0.1
 python-json-logger
 pytz
-pywinpty
 PyYAML
 pyzmq
 qtconsole
