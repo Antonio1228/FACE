@@ -220,7 +220,7 @@ def process_folder(shapes1, weights, max_values):
         score = perform_comparisons(
             shapes1_new, shapes2_new, weights, max_values)
         scores[image_file] = score
-        # print(f"Score for {image_file}: {score:.2f}")
+        print(f"Score for {image_file}: {score:.2f}")
     return scores
 
 
