@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from collections import deque
 import os
 from sklearn.neighbors import NearestNeighbors
-from scipy.spatial import KDTree
+from scipy.spatial import cKDTree
 import random
 from scipy.optimize import linear_sum_assignment
 from scipy.spatial import procrustes
@@ -36,6 +36,14 @@ max_values = {
     "knn": 1700,
 
 }
+
+
+def load_data():
+    pointsdata = pd.read_csv("points.csv")
+    return pd.DataFrame(pointsdata)
+
+
+df = load_data()
 
 
 def rect_to_bb(rect):
@@ -70,46 +78,36 @@ def extract_facial_landmarks(image_path, shape_predictor):
 
 
 def transform_points(points, x_range, y_range):
-    min_x, max_x = x_range
-    min_y, max_y = y_range
+    points = np.array(points)
+    x_min, x_max = x_range
+    y_min, y_max = y_range
+    points[:, 0] = (points[:, 0] - points[:, 0].min()) / \
+        (points[:, 0].max() - points[:, 0].min()) * (x_max - x_min) + x_min
+    points[:, 1] = (points[:, 1] - points[:, 1].min()) / \
+        (points[:, 1].max() - points[:, 1].min()) * (y_max - y_min) + y_min
 
-    orig_min_x = min(points, key=lambda p: p[0])[0]
-    orig_max_x = max(points, key=lambda p: p[0])[0]
-    orig_min_y = min(points, key=lambda p: p[1])[1]
-    orig_max_y = max(points, key=lambda p: p[1])[1]
-
-    transformed_points = []
-    for x, y in points:
-        new_x = min_x + (x - orig_min_x) / (orig_max_x -
-                                            orig_min_x) * (max_x - min_x)
-        new_y = min_y + (y - orig_min_y) / (orig_max_y -
-                                            orig_min_y) * (max_y - min_y)
-        transformed_points.append((new_x, new_y))
-
-    return transformed_points
+    return points
 
 
 def calculate_euclidean_distance(shapes1, shapes2):
-    distances = []
-    for point1 in shapes1:
-        min_distance = min(np.sqrt(
-            (point1[0] - point2[0])**2 + (point1[1] - point2[1])**2) for point2 in shapes2)
-        distances.append(min_distance)
+    tree2 = cKDTree(shapes2)
+    distances, _ = tree2.query(shapes1, k=1)
     return np.mean(distances)
 
 
 def calculate_similarity(shapes1, shapes2):
-    cost_matrix = np.zeros((len(shapes1), len(shapes2)))
-    for i, coord1 in enumerate(shapes1):
-        for j, coord2 in enumerate(shapes2):
-            cost_matrix[i, j] = np.linalg.norm(
-                np.array(coord1) - np.array(coord2))
-    row_ind, col_ind = linear_sum_assignment(cost_matrix)
+    # 將 shapes 轉換為 NumPy 數組
+    shapes1 = np.array(shapes1)
+    shapes2 = np.array(shapes2)
 
+    # 使用 NumPy 廣播計算整個成本矩陣
+    cost_matrix = np.linalg.norm(shapes1[:, np.newaxis] - shapes2, axis=2)
+
+    # 進行最優分配
+    row_ind, col_ind = linear_sum_assignment(cost_matrix)
     total_distance = cost_matrix[row_ind, col_ind].sum()
     max_distance = np.max(cost_matrix) * len(shapes1)
     similarity = 100 - (total_distance / max_distance * 100)
-
     return similarity
 
 
@@ -124,12 +122,11 @@ def calculate_min_max_avg_distance(shapes1, shapes2):
 
 
 def calculate_density(shapes1, shapes2, radius=250):
-    density_list = []
-    for point1 in shapes1:
-        count = sum(np.sqrt((point1[0] - point2[0]) ** 2 +
-                    (point1[1] - point2[1]) ** 2) < radius for point2 in shapes2)
-        density_list.append(count)
-    return density_list
+    shapes1 = np.array(shapes1)
+    shapes2 = np.array(shapes2)
+    dist_matrix = np.linalg.norm(shapes1[:, np.newaxis] - shapes2, axis=2)
+    density_list = np.sum(dist_matrix < radius, axis=1)
+    return density_list.tolist()
 
 
 def calculate_knn_distance(shapes1, shapes2, k=1):
@@ -142,28 +139,28 @@ def calculate_knn_distance(shapes1, shapes2, k=1):
 
 
 def EMD(shapes1, shapes2):
-    cost_matrix = np.zeros((len(shapes1), len(shapes2)))
-    for i, coord1 in enumerate(shapes1):
-        for j, coord2 in enumerate(shapes2):
-            cost_matrix[i, j] = np.linalg.norm(
-                np.array(coord1) - np.array(coord2))
+    # 將 shapes 轉換為 NumPy 數組
+    shapes1 = np.array(shapes1)
+    shapes2 = np.array(shapes2)
+
+    # 使用 NumPy 廣播計算整個成本矩陣
+    cost_matrix = np.linalg.norm(shapes1[:, np.newaxis] - shapes2, axis=2)
+
+    # 進行最優分配
     row_ind, col_ind = linear_sum_assignment(cost_matrix)
     total_distance = cost_matrix[row_ind, col_ind].sum()
     max_distance = np.max(cost_matrix) * len(shapes1)
     similarity = 100 - (total_distance / max_distance * 100)
-
     return similarity
 
 
 def calculate_jaccard_similarity(shapes1, shapes2, threshold):
-    similar_pairs = 0
-    for point1 in shapes1:
-        if any(np.linalg.norm(np.array(point1) - np.array(point2)) < threshold for point2 in shapes2):
-            similar_pairs += 1
-    for point2 in shapes2:
-        if any(np.linalg.norm(np.array(point2) - np.array(point1)) < threshold for point1 in shapes1):
-            similar_pairs += 1
-    similar_pairs = similar_pairs / 2
+    shapes1 = np.array(shapes1)
+    shapes2 = np.array(shapes2)
+
+    dist_matrix = np.linalg.norm(shapes1[:, np.newaxis] - shapes2, axis=2)
+
+    similar_pairs = np.sum(dist_matrix < threshold)
     union_size = len(shapes1) + len(shapes2) - similar_pairs
     jaccard_similarity = (similar_pairs / union_size) * 100
 
@@ -183,19 +180,14 @@ def calculate_procrustes_similarity(shapes1, shapes2):
 
 def perform_comparisons(shapes1, shapes2, weights, max_values):
     euclidean_distance = calculate_euclidean_distance(shapes1, shapes2)
-    min_distance, max_distance, avg_distance = calculate_min_max_avg_distance(
-        shapes1, shapes2)
     density = calculate_density(shapes1, shapes2)
     knn_distance = calculate_knn_distance(shapes1, shapes2, k=50)
-    KuhnMunkres = calculate_similarity(shapes1, shapes2)
     emd = EMD(shapes1, shapes2)
     jaccard = calculate_jaccard_similarity(shapes1, shapes2, threshold=42.5)
     procrustes = calculate_procrustes_similarity(shapes1, shapes2)
 
     euclidean_score = max(0, min(
         100, (max_values['euclidean'] - euclidean_distance) / max_values['euclidean'] * 100))
-    min_max_avg_score = max(0, min(
-        100, (max_values['min_max_avg'] - avg_distance) / max_values['min_max_avg'] * 100))
     density_score = max(
         0, min(100, np.mean(density) / max_values['density'] * 100))
     knn_score = max(
@@ -216,8 +208,6 @@ def perform_comparisons(shapes1, shapes2, weights, max_values):
 def process_folder(shapes1, weights, max_values):
     # get scores of all picture
     scores = {}
-    pointsdata = pd.read_csv("points.csv")
-    df = pd.DataFrame(pointsdata)
     for num in range(0, 110):
         shapes2 = df.iloc[num].to_list()
         image_file = shapes2[0]
